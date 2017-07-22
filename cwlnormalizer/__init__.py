@@ -56,7 +56,7 @@ def normalize_lists(doc):
     for step in doc.get('steps', []):
         for k in 'in', 'out':
             if k in step:
-                doc[k] = dict_to_list(doc[k])
+                doc[k] = dict_to_list(doc[k], value='source')
         for k in 'hints', 'requirements':
             if k in step:
                 doc[k] = dict_to_list(doc[k], key='class')
@@ -77,7 +77,21 @@ def normalize_base_command(doc):
 
 
 def normalize_steps(doc):
-    pass
+    for step in doc.get('steps', []):
+        step['scatter'] = wrap_to_list(step['scatter'])
+
+        for inp in step.get('in', []):
+            inp['source'] = wrap_to_list(inp['source'])
+
+
+def descend(doc, normalizers):
+    for step in doc.get('steps', []):
+        run = step.get('run', '')
+        if isinstance(run, dict):
+            normalize(run, normalizers)
+
+    for subgraph in doc.get('$graph', []):
+        normalize(subgraph, normalizers)
 
 
 def normalize(doc, normalizers=None):
@@ -89,6 +103,8 @@ def normalize(doc, normalizers=None):
 
     for n in normalizers:
         n(doc)
+
+    descend(doc, normalizers)
 
     return doc
 
