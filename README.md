@@ -26,3 +26,5 @@ or if you are already have document structure loaded into python dict:
 
     from cwlnormalizer import normalize
     normalize(doc)
+
+The dict will be changed in place, so clone it if you wan't to keep the original.
