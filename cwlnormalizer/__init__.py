@@ -56,10 +56,10 @@ def normalize_lists(doc):
     for step in doc.get('steps', []):
         for k in 'in', 'out':
             if k in step:
-                doc[k] = dict_to_list(doc[k], value='source')
+                step[k] = dict_to_list(step[k], value='source')
         for k in 'hints', 'requirements':
             if k in step:
-                doc[k] = dict_to_list(doc[k], key='class')
+                step[k] = dict_to_list(step[k], key='class')
 
 
 def normalize_arguments(doc):
@@ -78,7 +78,8 @@ def normalize_base_command(doc):
 
 def normalize_steps(doc):
     for step in doc.get('steps', []):
-        step['scatter'] = wrap_to_list(step['scatter'])
+        if 'scatter' in step:
+            step['scatter'] = wrap_to_list(step['scatter'])
 
         for inp in step.get('in', []):
             inp['source'] = wrap_to_list(inp['source'])
