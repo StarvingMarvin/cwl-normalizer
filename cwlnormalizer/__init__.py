@@ -41,6 +41,29 @@ def expand_type(t):
     return t
 
 
+def expand_req(req):
+    cls = req.get('class')
+
+    def software_req(req):
+        req['packages'] = dict_to_list(req['packages'], key='package', value='specs')
+
+    def init_workdir_req(req):
+        listing = req['listing']
+        if not isinstance(listing, str):
+            req['listing'] = wrap_to_list(req['listing'])
+
+    def env_var_req(req):
+        req['envDef'] = dict_to_list(req['envDef'], key='envName', value='envValue')
+
+    REQ_TRANSFORMS = {
+        'SoftwareRequirement': software_req,
+        'InitialWorkDirRequirement': init_workdir_req,
+        'EnvVarRequirement': env_var_req
+    }
+
+    REQ_TRANSFORMS.get(cls, lambda req: None)(req)
+
+
 def normalize_lists(doc):
     for k in 'inputs', 'outputs':
         if k in doc:
@@ -85,6 +108,13 @@ def normalize_steps(doc):
             inp['source'] = wrap_to_list(inp['source'])
 
 
+def normalize_requirements(doc):
+    for req in doc.get('requirements', []) + doc.get('hints', []):
+        expand_req(req)
+    for step in doc.get('steps', []):
+        normalize_requirements(step)
+
+
 def descend(doc, normalizers):
     for step in doc.get('steps', []):
         run = step.get('run', '')
@@ -98,7 +128,7 @@ def descend(doc, normalizers):
 def normalize(doc, normalizers=None):
     if normalizers is None:
         normalizers = [
-            normalize_lists, normalize_arguments,
+            normalize_lists, normalize_arguments, normalize_requirements,
             normalize_base_command, normalize_steps
         ]
 
